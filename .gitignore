@@ -38,3 +38,7 @@ jspm_packages
 
 chrome/dist
 octohint.safariextension/dist
+
+/target/
+**/*.rs.bk
+Cargo.lock

@@ -1,0 +1,9 @@
+[package]
+name = "octohint"
+version = "0.1.0"
+authors = ["Rongjian Zhang <pd4d10@gmail.com>"]
+
+[dependencies]
+
+[lib]
+crate-type = ["cdylib"]
