@@ -68,11 +68,18 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.json'],
     alias: {
       path: 'path-browserify',
+      stylus: path.resolve('src/empty'),
+      eslint: path.resolve('src/empty'),
+      prettier: path.resolve('src/empty'),
+      'prettier-eslint': path.resolve('src/empty'),
+      'vscode-emmet-helper': path.resolve('src/empty'),
     },
   },
 
   // https://github.com/postcss/postcss-js/issues/10#issuecomment-179782081
-  node: { fs: 'empty' },
+  node: {
+    fs: 'empty',
+  },
   plugins: [
     new CleanWebpackPlugin(isSafari ? 'octohint.safariextension/dist' : 'chrome/dist'),
     new StringReplacePlugin(),

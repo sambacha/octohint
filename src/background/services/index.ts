@@ -1,6 +1,6 @@
 import { CSSService, LESSService, SCSSService } from './css'
 import SimpleService from './simple'
-// import VueService from './vue'
+import VueService from './vue'
 
 function getServiceByFileName(ext: string) {
   switch (ext) {
@@ -10,8 +10,8 @@ function getServiceByFileName(ext: string) {
       return SCSSService
     case 'css':
       return CSSService
-    // case 'vue':
-    //   return VueService
+    case 'vue':
+      return VueService
     default:
       return SimpleService
   }
