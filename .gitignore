@@ -41,3 +41,4 @@ chrome/LICENSE
 octohint.safariextension/dist/
 octohint.safariextension/LICENSE
 *.zip
+.DS_Store
