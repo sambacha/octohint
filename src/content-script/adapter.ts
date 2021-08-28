@@ -1,44 +1,44 @@
-import { renderToContainer } from './renderer'
+import { renderToContainer } from './renderer';
 
 const $ = (selector: string, wrapper: HTMLElement = document.body) => {
-  const dom = wrapper.querySelector(selector)
-  if (!dom) return null
-  return dom as HTMLElement
-}
+  const dom = wrapper.querySelector(selector);
+  if (!dom) return null;
+  return dom as HTMLElement;
+};
 const $$ = (selector: string) => {
-  return document.querySelectorAll(selector)
-}
+  return document.querySelectorAll(selector);
+};
 
 function getCurrentUrl() {
-  return location.protocol + '//' + location.host + location.pathname
+  return location.protocol + '//' + location.host + location.pathname;
 }
 
 // Replace `//` with `/` to simulate file system path
 function getFilePath(loc: { host: string; pathname: string } = location) {
-  return '/' + loc.host + loc.pathname
+  return '/' + loc.host + loc.pathname;
 }
 
 export interface RenderParams {
-  container: HTMLElement
-  fontDom: HTMLElement
-  tabSizeDom: HTMLElement
-  lineWidth: number
-  lineHeight: number
-  paddingLeft: number
-  paddingTop: number
-  codeUrl: string
-  fileName: string
+  container: HTMLElement;
+  fontDom: HTMLElement;
+  tabSizeDom: HTMLElement;
+  lineWidth: number;
+  lineHeight: number;
+  paddingLeft: number;
+  paddingTop: number;
+  codeUrl: string;
+  fileName: string;
   // TODO: This is pretty tricky for making GitLab and Bitbucket work
-  beforeRender?: () => void
+  beforeRender?: () => void;
 }
 
 const getGithubParams = (): RenderParams | undefined => {
-  const container = $('.blob-wrapper')
-  const line1 = $('#LC1')
-  const tabSizeDom = $('.blob-wrapper table')
-  if (!container || !line1 || !tabSizeDom) return
+  const container = $('.blob-wrapper');
+  const line1 = $('#LC1');
+  const tabSizeDom = $('.blob-wrapper table');
+  if (!container || !line1 || !tabSizeDom) return;
 
-  const rect = line1.getBoundingClientRect()
+  const rect = line1.getBoundingClientRect();
   return {
     container,
     fontDom: line1,
@@ -49,15 +49,15 @@ const getGithubParams = (): RenderParams | undefined => {
     paddingTop: 0,
     codeUrl: getCurrentUrl().replace('/blob/', '/raw/'),
     fileName: getFilePath(),
-  }
-}
+  };
+};
 
 function getGithubGistParams(wrapper: HTMLElement): RenderParams | undefined {
-  const container = $('.blob-wrapper', wrapper)
-  const fontDom = $('.blob-wrapper .blob-code', wrapper)
-  const tabSizeDom = $('.blob-wrapper table', wrapper)
-  const codeAction = $('.file-actions a', wrapper)
-  const fileInfo = $('.file-info', wrapper)
+  const container = $('.blob-wrapper', wrapper);
+  const fontDom = $('.blob-wrapper .blob-code', wrapper);
+  const tabSizeDom = $('.blob-wrapper table', wrapper);
+  const codeAction = $('.file-actions a', wrapper);
+  const fileInfo = $('.file-info', wrapper);
   if (
     !container ||
     !fontDom ||
@@ -66,10 +66,10 @@ function getGithubGistParams(wrapper: HTMLElement): RenderParams | undefined {
     !fileInfo ||
     !(codeAction instanceof HTMLAnchorElement)
   )
-    return
+    return;
 
-  const codeUrl = codeAction.href
-  if (!codeUrl) return
+  const codeUrl = codeAction.href;
+  if (!codeUrl) return;
 
   return {
     container,
@@ -81,7 +81,7 @@ function getGithubGistParams(wrapper: HTMLElement): RenderParams | undefined {
     paddingTop: 0,
     codeUrl,
     fileName: getFilePath().replace(/\/$/, '') + fileInfo.innerText.trim(),
-  }
+  };
 }
 
 // const BitbucketRenderer: RendererParams = {
@@ -148,25 +148,25 @@ function getGithubGistParams(wrapper: HTMLElement): RenderParams | undefined {
 export const runAdapter = () => {
   // GitHub Gist
   if (location.host === 'gist.github.com') {
-    const containers = $$('.js-gist-file-update-container')
-    if (!containers) return
+    const containers = $$('.js-gist-file-update-container');
+    if (!containers) return;
     containers.forEach((container) => {
-      const params = getGithubGistParams(container as HTMLElement)
+      const params = getGithubGistParams(container as HTMLElement);
       if (params) {
-        renderToContainer(params)
+        renderToContainer(params);
       }
-    })
-    return
+    });
+    return;
   }
 
   // GitHub
   // TODO: Dynamic import
   // May be deployed at private domain, URL
   // So use DOM selector
-  const params = getGithubParams()
+  const params = getGithubParams();
   if (params) {
-    renderToContainer(params)
-    return
+    renderToContainer(params);
+    return;
   }
 
   // GitLab
@@ -184,4 +184,4 @@ export const runAdapter = () => {
   //   new Renderer(BitbucketRenderer)
   //   return
   // }
-}
+};

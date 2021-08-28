@@ -1,46 +1,49 @@
-import ts from 'typescript'
-import { BaseService } from './base'
-import * as path from 'path'
-import stdLibs from './node-libs.json'
-import { without, uniq } from 'lodash-es'
-import { ContentMessage, PositionInfo } from '../../types'
+import ts from 'typescript';
+import { BaseService } from './base';
+import * as path from 'path';
+import stdLibs from './node-libs.json';
+import { without, uniq } from 'lodash-es';
+import { ContentMessage, PositionInfo } from '../../types';
 
-const defaultLibName = '//lib.d.ts'
+const defaultLibName = '//lib.d.ts';
 
 function getFullLibName(name: string) {
-  return `/node_modules/@types/${name}/index.d.ts`
+  return `/node_modules/@types/${name}/index.d.ts`;
 }
 
 interface Files {
   [fileName: string]: {
-    version: number
-    content: string
+    version: number;
+    content: string;
     // dependencies: string[]
-  }
+  };
 }
 
 // FIXME: Very slow when click type `string`
 // TODO: Go to definition for third party libs
 export class TsService extends BaseService {
-  private service?: ts.LanguageService
+  private service?: ts.LanguageService;
   private getSourceFile(file: string) {
     // This is necesarry because createService is asynchronous
     if (this.service) {
-      const program = this.service.getProgram()
+      const program = this.service.getProgram();
       if (program) {
-        return program.getSourceFile(file)
+        return program.getSourceFile(file);
       }
     }
   }
-  private files: Files = {}
+  private files: Files = {};
   // private libs: Files = {}
 
   // Use regex to get third party lib names
   getLibNamesFromCode(code: string) {
-    const regs = [/[import|export].*?from\s*?['"](.*?)['"]/g, /require\(['"](.*?)['"]\)/g] // TODO: Exclude comment
-    let result: string[] = []
+    const regs = [
+      /[import|export].*?from\s*?['"](.*?)['"]/g,
+      /require\(['"](.*?)['"]\)/g,
+    ]; // TODO: Exclude comment
+    let result: string[] = [];
     for (const reg of regs) {
-      const matches = code.match(reg) || []
+      const matches = code.match(reg) || [];
       // console.log(reg, matches)
       // Exclude node standard libs
       const libs = without(
@@ -49,34 +52,38 @@ export class TsService extends BaseService {
           .map((str) => str.split('/')[0]) // Extract correct lib of `lodash/throttle`
           .filter((item) => item[0] !== '.'), // Exclude relative path, like `./xxx`
         ...stdLibs,
-      )
-      result = [...result, ...libs]
+      );
+      result = [...result, ...libs];
     }
-    return uniq(result)
+    return uniq(result);
   }
 
   // Try to get type definition
   async fetchLibCode(name: string) {
-    const fullname = getFullLibName(name)
+    const fullname = getFullLibName(name);
     if (this.files[fullname]) {
-      return
+      return;
     }
 
-    const prefix = 'https://unpkg.com'
+    const prefix = 'https://unpkg.com';
     try {
       // Find typings file path
       const { types, typings } = await this.fetchWithCredentials(
         path.join(prefix, name, 'package.json'),
         true,
-      )
+      );
       if (types || typings) {
-        return await this.fetchWithCredentials(path.join(prefix, name, types || typings))
+        return await this.fetchWithCredentials(
+          path.join(prefix, name, types || typings),
+        );
       }
 
       // If typings not specified, try DefinitelyTyped
-      return await this.fetchWithCredentials(path.join(prefix, '@types', name, 'index.d.ts'))
+      return await this.fetchWithCredentials(
+        path.join(prefix, '@types', name, 'index.d.ts'),
+      );
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
   }
 
@@ -89,57 +96,61 @@ export class TsService extends BaseService {
       //   this.files[fileName].version += 1
       //   this.files[fileName].content = code
       // }
-      return
+      return;
     } else {
       this.files[name] = {
         version: 0,
         content: code,
         // dependencies: [],
-      }
+      };
     }
-    console.log('Updated, current files:', this.files)
+    console.log('Updated, current files:', this.files);
   }
 
   // Notice that this method is asynchronous
   async createService(message: ContentMessage) {
-    if (this.files[message.file]) return
+    if (this.files[message.file]) return;
 
-    const { TS_LIB } = await import('../../ts-lib')
-    const code = await this.fetchCode(message)
-    this.updateContent(message.file, code)
+    const { TS_LIB } = await import('../../ts-lib');
+    const code = await this.fetchCode(message);
+    this.updateContent(message.file, code);
 
-    const libNames = this.getLibNamesFromCode(code)
-    console.log('Libs:', libNames)
-    const libCodes = await Promise.all(libNames.map((lib) => this.fetchLibCode(lib)))
+    const libNames = this.getLibNamesFromCode(code);
+    console.log('Libs:', libNames);
+    const libCodes = await Promise.all(
+      libNames.map((lib) => this.fetchLibCode(lib)),
+    );
     libNames.forEach((name, i) => {
-      const code = libCodes[i]
+      const code = libCodes[i];
       if (code) {
         // this.files[fileName].dependencies.push(name)
-        this.updateContent(getFullLibName(name), code)
+        this.updateContent(getFullLibName(name), code);
       }
-    })
+    });
 
     // https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API#incremental-build-support-using-the-language-services
     const host: ts.LanguageServiceHost = {
       getScriptFileNames: () => {
-        const fileNames = Object.keys(this.files)
+        const fileNames = Object.keys(this.files);
         // console.log('getScriptFileNames:', fileNames)
-        return fileNames
+        return fileNames;
       },
       getScriptVersion: (fileName) => {
-        const version = (this.files[fileName] && this.files[fileName].version.toString()) || '0'
+        const version =
+          (this.files[fileName] && this.files[fileName].version.toString()) ||
+          '0';
         // console.log('getScriptVersion:', fileName, version)
-        return version
+        return version;
       },
       getScriptSnapshot: (fileName) => {
-        let snapshot
+        let snapshot;
         if (fileName === defaultLibName) {
-          snapshot = ts.ScriptSnapshot.fromString(TS_LIB)
+          snapshot = ts.ScriptSnapshot.fromString(TS_LIB);
         } else if (this.files[fileName]) {
-          snapshot = ts.ScriptSnapshot.fromString(this.files[fileName].content)
+          snapshot = ts.ScriptSnapshot.fromString(this.files[fileName].content);
         }
         // console.log('getScriptSnapshot', fileName)
-        return snapshot
+        return snapshot;
       },
       getCurrentDirectory: () => '/',
       getCompilationSettings: () => ({
@@ -155,10 +166,10 @@ export class TsService extends BaseService {
       log: console.log,
       trace: console.log,
       error: console.error,
-    }
+    };
 
     // Create the language service files
-    this.service = ts.createLanguageService(host, ts.createDocumentRegistry())
+    this.service = ts.createLanguageService(host, ts.createDocumentRegistry());
   }
 
   // getPosition(sourceFile: ts.SourceFile, line: number, character: number) {
@@ -166,7 +177,7 @@ export class TsService extends BaseService {
   // }
 
   getOccurrences(info: PositionInfo) {
-    const instance = this.getSourceFile(info.file)
+    const instance = this.getSourceFile(info.file);
     if (instance) {
       // After upgrading to typescript@2.5
       // When mouse position is invalid (outside the code area), always break on a debugger expression
@@ -174,64 +185,90 @@ export class TsService extends BaseService {
       // Deactivate breakpoint to prevent annoying break, and catch this error
       // let position: number
       // try {
-      const position = instance.getPositionOfLineAndCharacter(info.line, info.character)
+      const position = instance.getPositionOfLineAndCharacter(
+        info.line,
+        info.character,
+      );
       // } catch (err) {
       //   console.error(err)
       //   return
       // }
       if (this.service) {
-        const references = this.service.getReferencesAtPosition(info.file, position)
+        const references = this.service.getReferencesAtPosition(
+          info.file,
+          position,
+        );
         if (references) {
           return references
             .filter(({ fileName }) => fileName === info.file)
             .map((reference) => ({
               isWriteAccess: reference.isWriteAccess,
-              range: instance.getLineAndCharacterOfPosition(reference.textSpan.start),
+              range: instance.getLineAndCharacterOfPosition(
+                reference.textSpan.start,
+              ),
               width: reference.textSpan.length,
-            }))
+            }));
         }
       }
     }
-    return []
+    return [];
   }
 
   getDefinition(info: PositionInfo) {
-    const instance = this.getSourceFile(info.file)
+    const instance = this.getSourceFile(info.file);
     if (this.service && instance) {
-      let position: number
+      let position: number;
       try {
-        position = instance.getPositionOfLineAndCharacter(info.line, info.character)
+        position = instance.getPositionOfLineAndCharacter(
+          info.line,
+          info.character,
+        );
       } catch (err) {
-        return
+        return;
       }
-      const definitions = this.service.getDefinitionAtPosition(info.file, position)
+      const definitions = this.service.getDefinitionAtPosition(
+        info.file,
+        position,
+      );
       if (definitions) {
-        const infosOfCurrentFile = definitions.filter((d) => d.fileName === info.file)
+        const infosOfCurrentFile = definitions.filter(
+          (d) => d.fileName === info.file,
+        );
         if (infosOfCurrentFile.length) {
-          return instance.getLineAndCharacterOfPosition(infosOfCurrentFile[0].textSpan.start)
+          return instance.getLineAndCharacterOfPosition(
+            infosOfCurrentFile[0].textSpan.start,
+          );
         }
       }
     }
   }
 
   getQuickInfo(info: PositionInfo) {
-    const instance = this.getSourceFile(info.file)
+    const instance = this.getSourceFile(info.file);
     if (this.service && instance) {
-      let position: number
+      let position: number;
       try {
-        position = instance.getPositionOfLineAndCharacter(info.line, info.character)
+        position = instance.getPositionOfLineAndCharacter(
+          info.line,
+          info.character,
+        );
       } catch (err) {
         // console.error(err)
-        return
+        return;
       }
-      const quickInfo = this.service.getQuickInfoAtPosition(info.file, position)
+      const quickInfo = this.service.getQuickInfoAtPosition(
+        info.file,
+        position,
+      );
       if (quickInfo && quickInfo.displayParts) {
         // TODO: Colorize display parts
         return {
           info: quickInfo.displayParts,
-          range: instance.getLineAndCharacterOfPosition(quickInfo.textSpan.start),
+          range: instance.getLineAndCharacterOfPosition(
+            quickInfo.textSpan.start,
+          ),
           width: quickInfo.textSpan.length,
-        }
+        };
       }
     }
   }

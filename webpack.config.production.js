@@ -1,7 +1,7 @@
 // @ts-check
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-const TerserPlugin = require('terser-webpack-plugin')
-const config = require('./webpack.config')
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const TerserPlugin = require('terser-webpack-plugin');
+const config = require('./webpack.config');
 
 /** @type {import('webpack').Configuration[]} */
 module.exports = {
@@ -26,4 +26,4 @@ module.exports = {
     ],
   },
   plugins: [...config.plugins, new BundleAnalyzerPlugin()],
-}
+};
