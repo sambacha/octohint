@@ -1,3 +1,3 @@
-import { runAdapter } from '../content-script/adapter'
+import { runAdapter } from '../content-script/adapter';
 
-runAdapter()
+runAdapter();

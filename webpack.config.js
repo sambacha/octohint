@@ -1,7 +1,7 @@
 // @ts-check
-const path = require('path')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const StringReplacePlugin = require('string-replace-webpack-plugin')
+const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const StringReplacePlugin = require('string-replace-webpack-plugin');
 
 /** @type {import('webpack').Configuration} */
 module.exports = {
@@ -35,13 +35,13 @@ module.exports = {
             {
               pattern: /factory\(require, exports\)/g,
               replacement: function (match, p1, offset, string) {
-                return 'factory(null, exports)'
+                return 'factory(null, exports)';
               },
             },
             {
               pattern: /function \(require, exports\)/,
               replacement: function (match, p1, offset, string) {
-                return 'function (UnUsedVar, exports)'
+                return 'function (UnUsedVar, exports)';
               },
             },
           ],
@@ -70,4 +70,4 @@ module.exports = {
     new CleanWebpackPlugin({ cleanOnceBeforeBuildPatterns: ['chrome/dist'] }),
     new StringReplacePlugin(),
   ],
-}
+};
