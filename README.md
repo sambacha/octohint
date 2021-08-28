@@ -1,15 +1,12 @@
-# Octohint
+# Octohint2
 
-[![chrome web store](https://img.shields.io/chrome-web-store/v/hbkpjkfdheainjkkebeoofkpgddnnbpk.svg)](https://chrome.google.com/webstore/detail/hbkpjkfdheainjkkebeoofkpgddnnbpk)
-[![users](https://img.shields.io/chrome-web-store/d/hbkpjkfdheainjkkebeoofkpgddnnbpk.svg)](https://chrome.google.com/webstore/detail/hbkpjkfdheainjkkebeoofkpgddnnbpk)
-[![rating](https://img.shields.io/chrome-web-store/stars/hbkpjkfdheainjkkebeoofkpgddnnbpk.svg)](https://chrome.google.com/webstore/detail/hbkpjkfdheainjkkebeoofkpgddnnbpk)
+> Fork of Octohint
 
 <img src="assets/demo.gif" alt="Demo" width="636" />
 
 ## Introduction
 
-Octohint is a browser extension which adds IntelliSense hint to GitHub and
-GitLab.
+Octohint2 is a browser extension which adds IntelliSense hint to GitHub
 
 [Introduction at Medium](https://medium.com/@pd4d10/introducing-octohint-e1a3e4b80c47)
 
